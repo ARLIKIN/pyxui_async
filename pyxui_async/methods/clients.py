@@ -157,13 +157,11 @@ class Clients:
             "settings": json.dumps(settings)
         }
 
-        response = await self.request(
+        return await self.request(
             path="addClient",
             method="POST",
             params=params
         )
-
-        return await self.verify_response(response)
 
     async def delete_client(
         self: "pyxui_async.XUI",
@@ -193,12 +191,10 @@ class Clients:
             uuid=uuid
         )
         
-        response = await self.request(
+        return await self.request(
             path=f"{inbound_id}/delClient/{find_client['id']}",
             method="POST"
         )
-
-        return await self.verify_response(response)
 
     async def update_client(
         self: "pyxui_async.XUI",
@@ -279,10 +275,8 @@ class Clients:
             "settings": json.dumps(settings)
         }
         
-        response = await self.request(
+        return await self.request(
             path=f"updateClient/{find_client['id']}",
             method="POST",
             params=params
         )
-
-        return await self.verify_response(response)

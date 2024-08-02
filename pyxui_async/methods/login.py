@@ -1,3 +1,4 @@
+import json
 from typing import Any
 
 import pyxui_async
@@ -35,10 +36,7 @@ class Login:
             }
         )
 
-        if send_request.status_code == 200:
-            self.session_string = send_request.cookies.get(self.cookie_name)
-
-            if self.session_string:
-                return True
+        if send_request['success'] and self.session_string:
+            return True
             
         raise errors.BadLogin()

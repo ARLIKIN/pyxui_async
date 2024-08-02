@@ -1,3 +1,6 @@
+import json
+from typing import Union
+
 import aiohttp
 
 import pyxui_async
@@ -10,7 +13,7 @@ class Base:
             path: str,
             method: str,
             params: dict = None
-    ) -> aiohttp.ClientResponse:
+    ) -> Union[dict, errors.NotFound]:
         """Request to the xui panel.
 
         Parameters:
@@ -37,22 +40,32 @@ class Base:
         else:
             cookie = None
 
-        async with aiohttp.ClientSession(cookies=cookie) as session:
-            if method == "GET":
-                async with session.get(url, ssl=self.https) as response:
-                    return await response.text()
-            elif method == "POST":
-                async with session.post(url, data=params,
-                                        ssl=self.https) as response:
-                    return await response.text()
+        self.session = aiohttp.ClientSession(cookies=cookie)
+
+        if method == "GET":
+            response = await self.session.get(url, ssl=self.https)
+        elif method == "POST":
+            response = await self.session.post(
+                    url,
+                    data=params,
+                    ssl=self.https
+            )
+        else:
+            raise errors.NotFound()
+        if path == "login":
+            self.session_string = response.cookies.get(self.cookie_name)
+
+        return await self.verify_response(response)
 
     async def verify_response(
             self: "pyxui_async.XUI",
             response: aiohttp.ClientResponse
-    ) -> dict:
+    ):
         content_type = response.headers.get('Content-Type', '')
         if response.status != 404 and content_type.startswith(
                 'application/json'):
-            return await response.json()
+            response = await response.json()
+            await self.session.close()
+            return response
 
         raise errors.NotFound()
