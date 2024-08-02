@@ -3,42 +3,44 @@ An application with python that allows you to modify your xui panel ([alireza0 x
 
 ## How To Install
 ```
-pip install pyxui
+pip install pyxui_async
 ```
 
 ## How To Use
 - Import pyxui in your .py file
+
 ```python
-from pyxui import XUI
+from pyxui_async import XUI
 
 # Basic:
 xui = XUI(
     full_address="https://staliox.com:2087",
-    panel="alireza", # Your panel name, "alireza" or "sanaei"
+    panel="alireza",  # Your panel name, "alireza" or "sanaei"
 )
 
 # Advanced:
 xui = XUI(
     full_address="http://staliox.site:2087",
-    panel="alireza", # Your panel name, "alireza" or "sanaei"
-    https=False, # Make note if you don't use https set False else set True
-    session_string=... # If you have session cookie to use panel without login
+    panel="alireza",  # Your panel name, "alireza" or "sanaei"
+    https=False,  # Make note if you don't use https set False else set True
+    session_string=...  # If you have session cookie to use panel without login
 )
 ```
 
 - Login in your panel
+
 ```python
-from pyxui.errors import BadLogin
+from pyxui_async.errors import BadLogin
 
 try:
-  xui.login(USERNAME, PASSWORD)
+   await xui.login(USERNAME, PASSWORD)
 except BadLogin:
-  ...
+    ...
 ```
 
 - Get inbounds list
 ```python
-get_inbounds = xui.get_inbounds()
+get_inbounds = await xui.get_inbounds()
 
 # Result
 {
@@ -78,7 +80,7 @@ get_inbounds = xui.get_inbounds()
 
 - Add client to the existing inbound
 ```python
-get = xui.add_client(
+get = await xui.add_client(
     inbound_id=1,
     email="example@gmal.com",
     uuid="5d3d1bac-49cd-4b66-8be9-a728efa205fa",
@@ -94,7 +96,7 @@ get = xui.add_client(
 
 - Update the existing client
 ```python
-get = xui.update_client(
+get = await xui.update_client(
     inbound_id=1,
     email="example@gmal.com",
     uuid="5d3d1bac-49cd-4b66-8be9-a728efa205fa",
@@ -110,7 +112,7 @@ get = xui.update_client(
 
 - Get client's information:
 ```python
-get_client = xui.get_client(
+get_client = await xui.get_client(
     inbound_id=1,
     email="Me",
     uuid="5d3d1bac-49cd-4b66-8be9-a728efa205fa" # Make note you don't have to pass both of them (emaill, uuid), just one is enough
@@ -132,7 +134,7 @@ get_client = xui.get_client(
 
 - Get client's statistics:
 ```python
-get_client = xui.get_client_stats(
+get_client = await xui.get_client_stats(
     inbound_id=1,
     email="Me",
 )
@@ -152,7 +154,7 @@ get_client = xui.get_client_stats(
 
 - Delete client from the existing inbound:
 ```python
-get_client = xui.delete_client(
+get_client = await xui.delete_client(
     inbound_id=1,
     email="Me",
     uuid="5d3d1bac-49cd-4b66-8be9-a728efa205fa" # Make note you don't have to pass both of them (email, uuid), just one is enough
@@ -161,8 +163,9 @@ get_client = xui.delete_client(
 
 # Create vmess and vless config string
 - Import config_generator
+
 ```python
-from pyxui.config_gen import config_generator
+from pyxui_async.config_gen import config_generator
 ```
 
 - VMESS:

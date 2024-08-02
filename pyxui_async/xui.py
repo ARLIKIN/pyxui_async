@@ -1,4 +1,4 @@
-from pyxui.methods import Methods
+from pyxui_async.methods import Methods
 
 class XUI(Methods):
     def __init__(

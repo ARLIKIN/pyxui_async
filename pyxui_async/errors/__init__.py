@@ -3,6 +3,7 @@ class Exceptions(Exception):
         self.message = message
         self.error_code = error_code
 
+
 class NotFound(Exceptions):
     code = 'NOT_FOUND'
     message = 'Error 404 has been received'
@@ -13,6 +14,7 @@ class NotFound(Exceptions):
     def __str__(self):
         return f"[{self.code}] {self.message}."
 
+
 class BadLogin(Exceptions):
     code = 'BAD_LOGIN'
     message = 'Username or password is incorrect'
@@ -22,6 +24,7 @@ class BadLogin(Exceptions):
 
     def __str__(self):
         return f"[{self.code}] {self.message}."
+
 
 class AlreadyLogin(Exceptions):
     code = 'ALREADY_LOGIN'

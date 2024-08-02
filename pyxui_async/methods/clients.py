@@ -1,12 +1,13 @@
 import json
 from typing import Union
 
-import pyxui
-from pyxui import errors
+import pyxui_async
+from pyxui_async import errors
+
 
 class Clients:
-    def get_client(
-        self: "pyxui.XUI",
+    async def get_client(
+        self: "pyxui_async.XUI",
         inbound_id: int,
         email: str = False,
         uuid: str = False
@@ -27,7 +28,7 @@ class Clients:
             `~Dict`: On success, a dict is returned or else 404 an error will be raised
         """
         
-        get_inbounds = self.get_inbounds()
+        get_inbounds = await self.get_inbounds()
         
         if not email and not uuid:
             raise ValueError()
@@ -46,8 +47,8 @@ class Clients:
 
         raise errors.NotFound()
 
-    def get_client_stats(
-        self: "pyxui.XUI",
+    async def get_client_stats(
+        self: "pyxui_async.XUI",
         inbound_id: int,
         email: str,
     ) -> Union[dict, errors.NotFound]:
@@ -64,7 +65,7 @@ class Clients:
             `~Dict`: On success, a dict is returned or else 404 error will be raised
         """
         
-        get_inbounds = self.get_inbounds()
+        get_inbounds = await self.get_inbounds()
         
         if not email:
             raise ValueError()
@@ -83,8 +84,8 @@ class Clients:
 
         raise errors.NotFound()
 
-    def add_client(
-        self: "pyxui.XUI",
+    async def add_client(
+        self: "pyxui_async.XUI",
         inbound_id: int,
         email: str,
         uuid: str,
@@ -132,7 +133,7 @@ class Clients:
         Returns:
             `~Dict`: On success, a dict is returned else 404 error will be raised
         """
-        
+
         settings = {
             "clients": [
                 {
@@ -156,16 +157,16 @@ class Clients:
             "settings": json.dumps(settings)
         }
 
-        response = self.request(
+        response = await self.request(
             path="addClient",
             method="POST",
             params=params
         )
 
-        return self.verify_response(response)
+        return await self.verify_response(response)
 
-    def delete_client(
-        self: "pyxui.XUI",
+    async def delete_client(
+        self: "pyxui_async.XUI",
         inbound_id: int,
         email: str = False,
         uuid: str = False
@@ -186,21 +187,21 @@ class Clients:
             `~Dict`: On success, a dict is returned else 404 error will be raised
         """
         
-        find_client = self.get_client(
+        find_client = await self.get_client(
             inbound_id=inbound_id,
             email=email,
             uuid=uuid
         )
         
-        response = self.request(
+        response = await self.request(
             path=f"{inbound_id}/delClient/{find_client['id']}",
             method="POST"
         )
 
-        return self.verify_response(response)
+        return await self.verify_response(response)
 
-    def update_client(
-        self: "pyxui.XUI",
+    async def update_client(
+        self: "pyxui_async.XUI",
         inbound_id: int,
         email: str,
         uuid: str,
@@ -249,7 +250,7 @@ class Clients:
             `~Dict`: On success, a dict is returned else 404 error will be raised
         """
         
-        find_client = self.get_client(
+        find_client = await self.get_client(
             inbound_id=inbound_id,
             email=email,
             uuid=uuid
@@ -278,10 +279,10 @@ class Clients:
             "settings": json.dumps(settings)
         }
         
-        response = self.request(
+        response = await self.request(
             path=f"updateClient/{find_client['id']}",
             method="POST",
             params=params
         )
 
-        return self.verify_response(response)
+        return await self.verify_response(response)

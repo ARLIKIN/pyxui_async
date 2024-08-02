@@ -1,11 +1,12 @@
 from typing import Any
 
-import pyxui
-from pyxui import errors
+import pyxui_async
+from pyxui_async import errors
+
 
 class Login:
-    def login(
-        self: "pyxui.XUI",
+    async def login(
+        self: "pyxui_async.XUI",
         username: str,
         password: str
     ) -> Any:
@@ -25,7 +26,7 @@ class Login:
         if self.session_string:
             raise errors.AlreadyLogin()
         
-        send_request = self.request(
+        send_request = await self.request(
             path="login",
             method="POST",
             params={
