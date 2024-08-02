@@ -52,6 +52,7 @@ class Base:
             )
         else:
             raise errors.NotFound()
+
         if path == "login":
             self.session_string = response.cookies.get(self.cookie_name)
 
