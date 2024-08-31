@@ -55,6 +55,9 @@ class Base:
 
         if path == "login":
             self.session_string = response.cookies.get(self.cookie_name)
+            if self.session_string is None:
+                self.session_string = response.cookies.get(self.old_cookie_name)
+                self.cookie_name = self.old_cookie_name
 
         return await self.verify_response(response)
 
