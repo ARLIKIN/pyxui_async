@@ -14,7 +14,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/ARLIKIN/pyxui_async",
     keywords=[
-        "pyxui_async",
+        "pyxui async",
         "xui",
         "xui python",
         "xui panel"
