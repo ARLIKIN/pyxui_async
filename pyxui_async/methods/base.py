@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Union
 
@@ -9,10 +10,10 @@ from pyxui_async import errors
 
 class Base:
     async def request(
-            self: "pyxui_async.XUI",
-            path: str,
-            method: str,
-            params: dict = None
+        self: "pyxui_async.XUI",
+        path: str,
+        method: str,
+        params: dict = None
     ) -> Union[dict, errors.NotFound]:
         """Request to the xui panel.
 
@@ -42,22 +43,32 @@ class Base:
 
         self.session = aiohttp.ClientSession(cookies=cookie)
 
-        if method == "GET":
-            response = await self.session.get(url, ssl=self.https)
-        elif method == "POST":
-            response = await self.session.post(
+        try:
+            if method == "GET":
+                response = await self.session.get(
+                    url,
+                    ssl=self.https,
+                    timeout=self.timeout,
+                )
+            elif method == "POST":
+                response = await self.session.post(
                     url,
                     data=params,
-                    ssl=self.https
-            )
-        else:
-            raise errors.NotFound()
+                    ssl=self.https,
+                    timeout=self.timeout,
+                )
+            else:
+                raise errors.NotFound()
 
-        if path == "login":
-            self.session_string = response.cookies.get(self.cookie_name)
-            if self.session_string is None:
-                self.session_string = response.cookies.get(self.old_cookie_name)
-                self.cookie_name = self.old_cookie_name
+            if path == "login":
+                self.session_string = response.cookies.get(self.cookie_name)
+                if self.session_string is None:
+                    self.session_string = response.cookies.get(
+                        self.old_cookie_name)
+                    self.cookie_name = self.old_cookie_name
+        except asyncio.TimeoutError as e:
+            await self.session.close()
+            raise asyncio.TimeoutError(e)
 
         return await self.verify_response(response)
 
