@@ -199,15 +199,15 @@ class Clients:
     async def update_client(
         self: "pyxui_async.XUI",
         inbound_id: int,
-        email: str,
-        uuid: str,
-        enable: bool,
-        flow: str,
-        limit_ip: int,
-        total_gb: int,
-        expire_time: int,
-        telegram_id: str,
-        subscription_id: str,
+        email: str | bool = False,
+        uuid: str | bool = False,
+        enable: bool | None = None,
+        flow: str | None = None,
+        limit_ip: int | None = None,
+        total_gb: int | None = None,
+        expire_time: int | None = None,
+        telegram_id: str | None = None,
+        subscription_id: str | None = None,
     ) -> Union[dict, errors.NotFound]:
         """Add client to the existing inbound.
 
@@ -255,15 +255,15 @@ class Clients:
         settings = {
             "clients": [
                 {
-                    "id": uuid,
-                    "email": email,
-                    "enable": enable,
-                    "flow": flow,
-                    "limitIp": limit_ip,
-                    "totalGB": total_gb,
-                    "expiryTime": expire_time,
-                    "tgId": telegram_id,
-                    "subId": subscription_id
+                    "id": find_client['id'],
+                    "email": find_client['email'],
+                    "enable": enable if enable is not None else find_client['enable'],
+                    "flow": flow if flow else find_client['flow'],
+                    "limitIp": limit_ip if limit_ip else find_client['limitIp'],
+                    "totalGB": total_gb if total_gb else find_client['totalGB'],
+                    "expiryTime": expire_time if expire_time else find_client['expiryTime'],
+                    "tgId": telegram_id if telegram_id else find_client['tgId'],
+                    "subId": subscription_id if subscription_id else find_client['subId'],
                 }
             ],
             "decryption": "none",
