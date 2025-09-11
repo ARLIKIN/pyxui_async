@@ -86,7 +86,7 @@ class Base:
 
 async def verify_response(
         response: aiohttp.ClientResponse
-) -> Union[dict, bytes]:
+) -> Union[dict, bytes, str]:
     content_type = response.headers.get('Content-Type', '')
     if response.status == 404:
         raise NotFound()
@@ -100,5 +100,9 @@ async def verify_response(
             )
     if content_type.startswith('application/json'):
         return await response.json()
+    elif content_type.startswith(
+        ('text/plain', 'text/html', 'text/css', 'text/javascript','text/xml')
+    ):
+        return await response.text()
     else:
         return await response.read()

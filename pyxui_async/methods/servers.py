@@ -158,10 +158,10 @@ class Server:
         )
         return EchCertResponse(**result)
 
-    async def tgbot_send_backup(self) -> GenericObjResponse:
+    async def tgbot_send_backup(self) -> str:
         """Отправить резервную копию базы через Telegram-бота администраторам."""
         result = await self.request(
             method=GET,
             endpoint=f'/panel/api/backuptotgbot'
         )
-        return GenericObjResponse(**result)
+        return str(result)
