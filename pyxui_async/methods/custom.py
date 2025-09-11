@@ -1,6 +1,6 @@
 from typing import Union
 
-from pyxui_async.config_gen.vless import build_vless_from_inbound
+from pyxui_async.config_gen import build_vless_from_inbound
 from pyxui_async.errors import NotFound
 from pyxui_async.models import Client, GenericObjResponse
 

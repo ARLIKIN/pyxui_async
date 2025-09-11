@@ -16,7 +16,8 @@ async def build_vless_from_inbound(
     """
     if inbound.protocol.lower() != 'vless':
         raise ValueError(
-            f"The protocol must be VLESS, received: {inbound.protocol}")
+            f"The protocol must be VLESS, received: {inbound.protocol}"
+        )
     if not inbound.settings.clients or len(inbound.settings.clients) == 0:
         raise ValueError("There are no clients in Inbound")
     client = None
@@ -53,13 +54,11 @@ async def build_vless_from_inbound(
                     + stream.tlsSettings.alpn[1]
                 )
                 params["ech"] = stream.tlsSettings.settings.echConfigList
-
         if stream.network == "tcp" and stream.tcpSettings:
             tcp = stream.tcpSettings
             if tcp.header and tcp.header.get("type"):
                 if tcp.header["type"] != 'none':
                     params["headerType"] = tcp.header["type"]
-
         if stream.security == "reality" and stream.realitySettings:
             if stream.realitySettings.settings.get('mldsa65Verify'):
                 params["pqv"] = stream.realitySettings.settings['mldsa65Verify']
@@ -68,13 +67,9 @@ async def build_vless_from_inbound(
     else:
         params["type"] = "tcp"
     query_string = urllib.parse.urlencode(params)
-
     if custom_remark:
         remark = custom_remark
     else:
         remark = f"{client.email}"
-
-    # URL-кодируем remark для фрагмента
     fragment = "#" + urllib.parse.quote(remark, safe='')
-
     return f"{base}?{query_string}{fragment}"

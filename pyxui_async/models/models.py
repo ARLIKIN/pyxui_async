@@ -27,6 +27,7 @@ class Client(BaseModel):
 class ClientSettings(BaseModel):
     clients: List[Client]
 
+
 class AddClientRequest(BaseModel):
     id: int
     settings: ClientSettings
@@ -176,6 +177,7 @@ class InboundClientStats(BaseModel):
     reset: int
     lastOnline: Optional[int] = None
 
+
 class Inbound(BaseModel):
     id: int
     up: int
@@ -228,13 +230,16 @@ class ResponseBase(BaseModel):
     msg: str
     obj: Optional[Any] = None
 
+
 class InboundsResponse(ResponseBase):
     success: bool
     msg: str
     obj: List[Inbound]
 
+
 class InboundResponse(ResponseBase):
     obj: Optional[Inbound]
+
 
 class ClientTraffic(BaseModel):
     id: int
@@ -249,31 +254,40 @@ class ClientTraffic(BaseModel):
     reset: int
     lastOnline: int
 
+
 class ClientTrafficsResponse(ResponseBase):
     obj: Optional[Union[ClientTraffic, List[ClientTraffic]]]
+
 
 class GenericObjResponse(ResponseBase):
     obj: Optional[Any]
 
+
 class UUIDData(BaseModel):
     uuid: str
+
 
 class UUIDResponse(ResponseBase):
     obj: UUIDData
 
+
 class X25519CertResponse(ResponseBase):
     obj: Dict[str, str]
 
+
 class Mldsa65Response(ResponseBase):
     obj: Dict[str, str]
+
 
 class VlessEncAuth(BaseModel):
     decryption: str
     encryption: str
     label: str
 
+
 class VlessEncResponse(ResponseBase):
     obj: Dict[str, List[VlessEncAuth]]
+
 
 class EchCertResponse(ResponseBase):
     obj: Dict[str, str]
