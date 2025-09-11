@@ -27,7 +27,7 @@ class Server:
             method=GET,
             endpoint=f'/panel/api/server/getDb'
         )
-        return GenericObjResponse(**result)
+        return result
 
     async def get_xray_version(self) -> GenericObjResponse:
         """Получить список версий Xray, доступных для установки."""

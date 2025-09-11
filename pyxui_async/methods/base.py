@@ -83,12 +83,22 @@ class Base:
             return match.group(1)
         raise ValueError("Invalid URL server")
 
+
 async def verify_response(
         response: aiohttp.ClientResponse
-) -> Union[dict, NotFound]:
+) -> Union[dict, bytes]:
     content_type = response.headers.get('Content-Type', '')
-    if response.status != 404 and content_type.startswith(
-            'application/json'):
-        response = await response.json()
-        return response
-    raise NotFound()
+    if response.status == 404:
+        raise NotFound()
+    if not (200 <= response.status < 300):
+        try:
+            error_text = await response.text()
+            raise ValueError(f"HTTP {response.status}: {error_text}")
+        except UnicodeDecodeError:
+            raise ValueError(
+                f"HTTP {response.status}: Binary response with an error"
+            )
+    if content_type.startswith('application/json'):
+        return await response.json()
+    else:
+        return await response.read()
