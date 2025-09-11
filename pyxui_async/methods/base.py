@@ -1,9 +1,8 @@
-import logging
-
 import aiohttp
-from typing import Optional, Dict, Any, Union
+import logging
+import re
 
-from aiohttp import ClientConnectorError
+from typing import Optional, Dict, Any, Union
 
 from pyxui_async.errors import NotFound
 
@@ -72,6 +71,17 @@ class Base:
             raise
         finally:
             await self.close()
+
+    def get_domain(self) -> Union[str, ValueError]:
+        """
+        Извлекает домен или IP-адрес из переданной строки.
+        :return: Домен или IP-адрес.
+        """
+        pattern = r"^(?:https?://)?([a-zA-Z0-9.-]+)(?::\d+)?(?:/.*)?$"
+        match = re.match(pattern, self.address)
+        if match:
+            return match.group(1)
+        raise ValueError("Invalid URL server")
 
 async def verify_response(
         response: aiohttp.ClientResponse

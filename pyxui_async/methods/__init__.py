@@ -1,0 +1,15 @@
+from pyxui_async.methods.base import Base
+from pyxui_async.methods.castom_methods import Custom
+from pyxui_async.methods.clients import Client
+from pyxui_async.methods.inbounds import Inbounds
+from pyxui_async.methods.login import Login
+
+
+class Methods(
+    Base,
+    Inbounds,
+    Client,
+    Custom,
+    Login
+):
+    pass

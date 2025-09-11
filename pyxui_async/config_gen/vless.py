@@ -1,6 +1,7 @@
 import urllib.parse
-from typing import Optional, List
+from typing import Optional, Union
 
+from pyxui_async.errors import NotFound
 from pyxui_async.models import Inbound
 
 
@@ -9,47 +10,32 @@ async def build_vless_from_inbound(
     email: str,
     address: str,
     custom_remark: Optional[str] = None,
-) -> str:
-
-
-    # Проверяем что это VLESS протокол
+) -> Union[str, ValueError, NotFound]:
+    """
+    Собирает из данных подключения ключ пользователя Vless.
+    """
     if inbound.protocol.lower() != 'vless':
         raise ValueError(
-            f"Протокол должен быть VLESS, получен: {inbound.protocol}")
-
-    # Проверяем наличие клиентов
+            f"The protocol must be VLESS, received: {inbound.protocol}")
     if not inbound.settings.clients or len(inbound.settings.clients) == 0:
-        raise ValueError("В Inbound нет клиентов")
-
+        raise ValueError("There are no clients in Inbound")
     client = None
     for client_setting in inbound.settings.clients:
         if client_setting.email != email:
             continue
         client = client_setting
-
     if client is None:
-        raise ValueError()
-
-    # Базовая часть URI
+        raise NotFound()
     base = f"vless://{client.id}@{address}:{inbound.port}"
-
-    # Собираем параметры
-    params = {
-        "encryption": "none"  # VLESS всегда использует none
-    }
-
-    # Настройки стрима
+    params = {}
     if inbound.streamSettings:
         stream = inbound.streamSettings
         params["type"] = stream.network
-        params["security"] = 'none'
-
         if inbound.settings.encryption:
             params["encryption"] = inbound.settings.encryption
-
+        params["security"] = 'none'
         if stream.security and stream.security != "none":
             params["security"] = stream.security
-
         if stream.security == "reality" and stream.realitySettings:
             reality = stream.realitySettings
             params["pbk"] = reality.settings['publicKey']
@@ -62,7 +48,10 @@ async def build_vless_from_inbound(
         elif stream.security == "tls":
             if stream.tlsSettings:
                 params["fp"] = stream.tlsSettings.settings.fingerprint
-                params["alpn"] = stream.tlsSettings.alpn[0] + ',' + stream.tlsSettings.alpn[1]
+                params["alpn"] = (
+                    stream.tlsSettings.alpn[0] + ','
+                    + stream.tlsSettings.alpn[1]
+                )
                 params["ech"] = stream.tlsSettings.settings.echConfigList
 
         if stream.network == "tcp" and stream.tcpSettings:
@@ -72,7 +61,7 @@ async def build_vless_from_inbound(
                     params["headerType"] = tcp.header["type"]
 
         if stream.security == "reality" and stream.realitySettings:
-            if stream.realitySettings.settings['mldsa65Verify']:
+            if stream.realitySettings.settings.get('mldsa65Verify'):
                 params["pqv"] = stream.realitySettings.settings['mldsa65Verify']
             if client.flow:
                 params["flow"] = client.flow

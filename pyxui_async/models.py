@@ -170,18 +170,18 @@ class InboundClientStats(BaseModel):
     email: str
     up: int
     down: int
-    allTime: int
+    allTime: Optional[int] = None
     expiryTime: int
     total: int
     reset: int
-    lastOnline: int
+    lastOnline: Optional[int] = None
 
 class Inbound(BaseModel):
     id: int
     up: int
     down: int
     total: int
-    allTime: int
+    allTime: Optional[int] = None
     remark: str
     enable: bool
     expiryTime: int
