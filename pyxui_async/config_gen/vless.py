@@ -44,11 +44,12 @@ async def build_vless_from_inbound(
         params["type"] = stream.network
         params["security"] = 'none'
 
-        # Безопасность
+        if inbound.settings.encryption:
+            params["encryption"] = inbound.settings.encryption
+
         if stream.security and stream.security != "none":
             params["security"] = stream.security
 
-        # Reality настройки
         if stream.security == "reality" and stream.realitySettings:
             reality = stream.realitySettings
             params["pbk"] = reality.settings['publicKey']

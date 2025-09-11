@@ -8,19 +8,19 @@ GET = 'GET'
 
 
 class Client(BaseModel):
-    id: Optional[str] = "" # UUID
+    id: Optional[str] = ""
     flow: Optional[str] = ""
-    email: str  # уникальный email клиента, используется для поиска и операций
+    email: str
     limitIp: Optional[int] = 0
     totalGB: Optional[int] = 0
     expiryTime: Optional[int] = 0
     enable: Optional[bool] = True
-    tgId: Optional[Any] = ""  # может быть int или str
-    subId: Optional[str] = ""  # id подписки
+    tgId: Optional[Any] = ""
+    subId: Optional[str] = ""
     reset: Optional[int] = 0
     comment: Optional[str] = ""
-    security: Optional[str] = ""  # для некоторых протоколов
-    password: Optional[str] = ""  # для некоторых протоколов
+    security: Optional[str] = ""
+    password: Optional[str] = ""
     created_at: Optional[int] = None
     updated_at: Optional[int] = None
 
@@ -44,13 +44,13 @@ class RealitySettings(BaseModel):
     maxClientVer: Optional[str] = None
     maxTimediff: int
     shortIds: List[str]
-    mldsa65Seed: Optional[str]
+    mldsa65Seed: Optional[str] = None
     settings: Dict[str, Any]
 
 
 class TcpSettings(BaseModel):
     acceptProxyProtocol: bool
-    header: Dict[str, str]
+    header: Dict[str, Union[str, Dict[str, Any]]]
 
 
 class Certificate(BaseModel):
@@ -96,7 +96,12 @@ class TlsSettings(BaseModel):
     echForceQuery: Optional[str] = "none"
     settings: Optional[TlsSettingsInner] = None
 
-    @field_validator('serverName', 'cipherSuites', 'echServerKeys', mode='before')
+    @field_validator(
+        'serverName',
+        'cipherSuites',
+        'echServerKeys',
+        mode='before'
+    )
     @classmethod
     def empty_string_to_none(cls, v):
         if v == "":
@@ -120,11 +125,9 @@ class SniffingSettings(BaseModel):
     routeOnly: Optional[bool] = False
 
 
-# Исправленная модель InboundSettings - clients теперь опциональное
 class InboundSettings(BaseModel):
-    clients: Optional[List[Client]] = []  # Сделано опциональным для протоколов типа Wireguard
+    clients: Optional[List[Client]] = []
     fallbacks: List[Any] = []
-    # Добавляем дополнительные поля для Wireguard и других протоколов
     mtu: Optional[int] = None
     secretKey: Optional[str] = None
     peers: Optional[List[Dict[str, Any]]] = []
@@ -132,14 +135,16 @@ class InboundSettings(BaseModel):
     workers: Optional[int] = None
     domainStrategy: Optional[str] = None
     noKernelTun: Optional[bool] = None
+    decryption: Optional[str] = None
+    encryption: Optional[str] = None
+    selectedAuth: Optional[str] = None
 
 
-# Исправленная модель Sniffing - все поля опциональные с дефолтными значениями
 class Sniffing(BaseModel):
     enabled: bool
     destOverride: List[str]
-    metadataOnly: Optional[bool] = False  # Сделано опциональным с дефолтом
-    routeOnly: Optional[bool] = False     # Сделано опциональным с дефолтом
+    metadataOnly: Optional[bool] = False
+    routeOnly: Optional[bool] = False
 
 
 class InboundRequest(BaseModel):
@@ -202,7 +207,6 @@ class Inbound(BaseModel):
         if isinstance(v, str):
             return json.loads(v)
         elif isinstance(v, dict):
-            # Добавляем дефолтные значения если их нет
             if 'metadataOnly' not in v:
                 v['metadataOnly'] = False
             if 'routeOnly' not in v:
@@ -213,7 +217,7 @@ class Inbound(BaseModel):
     @classmethod
     def parse_stream_settings(cls, v):
         if isinstance(v, str):
-            if v.strip() == '':  # Обработка пустых строк
+            if v.strip() == '':
                 return None
             return json.loads(v)
         return v
