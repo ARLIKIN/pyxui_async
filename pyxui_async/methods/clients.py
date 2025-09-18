@@ -161,6 +161,18 @@ class Client:
         )
         return GenericObjResponse(**result)
 
+    async def delete_client_email(
+        self,
+        inbound_id: int,
+        email: str
+    ) -> GenericObjResponse:
+        """Удалить клиента из Inbound по email."""
+        result = await self.request(
+            method=POST,
+            endpoint=f'/panel/api/inbounds/{inbound_id}/delClientByEmail/{email}'
+        )
+        return GenericObjResponse(**result)
+
     async def delete_depleted_clients(
         self,
         inbound_id: Optional[int] = None

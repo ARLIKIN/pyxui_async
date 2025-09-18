@@ -14,8 +14,11 @@ class Custom:
     ) -> GenericObjResponse:
         """Удалить клиента из Inbound по UUID или по email."""
         if email is not None:
-            client = await self.get_client(inbound_id, email)
-            return await self.delete_client_id(inbound_id, client.id)
+            try:
+                return await self.delete_client_email(inbound_id, email)
+            except NotFound:
+                client = await self.get_client(inbound_id, email)
+                return await self.delete_client_id(inbound_id, client.id)
         elif uuid is not None:
             return await self.delete_client_id(inbound_id, uuid)
         else:
