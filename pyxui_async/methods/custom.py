@@ -1,6 +1,7 @@
 from typing import Union
 
 from pyxui_async.config_gen import build_vless_from_inbound
+from pyxui_async.config_gen.trojan import build_trojan_from_inbound
 from pyxui_async.errors import NotFound
 from pyxui_async.models import Client, GenericObjResponse
 
@@ -39,7 +40,16 @@ class Custom:
             return client
         raise NotFound()
 
-    async def get_key_vless(self, inbound_id, email) -> str:
+    async def get_key_vless(self, inbound_id, email, custom_remark=None) -> str:
         inbound = await self.get_inbound(inbound_id)
         domain = self.get_domain()
-        return await build_vless_from_inbound(inbound.obj, email, domain)
+        return await build_vless_from_inbound(
+            inbound.obj, email, domain, custom_remark
+        )
+
+    async def get_key_trojan(self, inbound_id, email, custom_remark=None) -> str:
+        inbound = await self.get_inbound(inbound_id)
+        domain = self.get_domain()
+        return await build_trojan_from_inbound(
+            inbound.obj, email, domain, custom_remark
+        )
