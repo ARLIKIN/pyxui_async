@@ -1,5 +1,6 @@
 from typing import Union
 
+from pyxui_async.models import InboundClientStats
 from pyxui_async.config_gen import build_vless_from_inbound
 from pyxui_async.config_gen.shadowsocks import build_shadowsocks_from_inbound
 from pyxui_async.config_gen.trojan import build_trojan_from_inbound
@@ -39,6 +40,22 @@ class Custom:
             if client.email != email:
                 continue
             return client
+        raise NotFound()
+
+    async def get_client_stat(
+        self: "XUI",
+        inbound_id: int,
+        email: str,
+    ) -> Union[InboundClientStats, NotFound]:
+        if not email:
+            raise ValueError()
+        inbounds = await self.get_inbounds()
+        for inbound in inbounds.obj:
+            if inbound.id == inbound_id:
+                for client in inbound.clientStats:
+                    if client.email != email:
+                        continue
+                    return client
         raise NotFound()
 
     async def get_key_vless(self, inbound_id, email, custom_remark=None) -> str:
