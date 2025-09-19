@@ -14,7 +14,6 @@ async def build_shadowsocks_from_inbound(
 ) -> Union[str, ValueError, NotFound]:
     """
     Собирает из данных подключения ключ пользователя ShadowSocks.
-    Использует формат: method:password:client_password
     """
     if inbound.protocol.lower() != 'shadowsocks':
         raise ValueError(
