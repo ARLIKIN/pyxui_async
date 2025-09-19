@@ -139,6 +139,9 @@ class InboundSettings(BaseModel):
     decryption: Optional[str] = None
     encryption: Optional[str] = None
     selectedAuth: Optional[str] = None
+    method: Optional[str] = None
+    password: Optional[str] = None
+    network: Optional[str] = None
 
 
 class Sniffing(BaseModel):
