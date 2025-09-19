@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
     
-VERSION = "1.0.4"
+VERSION = "2.0.0"
 
 with open("README.md", "r") as f:
     readme = f.read()
@@ -20,7 +20,10 @@ setup(
         "xui panel"
     ],
     packages=find_packages(),
-    install_requires=["requests"],
+    install_requires=[
+        "requests",
+        "pydantic>=2.11.7"
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
