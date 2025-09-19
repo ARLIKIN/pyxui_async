@@ -72,7 +72,7 @@ class Custom:
         https: bool | None = None,
         port: int = 2096,
         sub_path: str = '/sub/'
-    ) -> str:
+    ) -> Union[str, ValueError]:
         """
         Получение ссылки подписки
         :param inbound_id: ID подключения
@@ -80,11 +80,13 @@ class Custom:
         :param https: Если вы хотите явно указать использовать https или нет
         :param port: порт подписки (указывается в настройках)
         :param sub_path: Корневой путь URL-адреса подписки (Указывается в настройках)
-        :return: url
+        :return: url or ValueError
         """
         if https is None:
             https = self.https
         client = await self.get_client(inbound_id, email)
+        if client.subId is None:
+            raise ValueError('Client subID not found')
         domain = self.get_domain()
         if https:
             return f'https://{domain}:{port}{sub_path}{client.subId}'
