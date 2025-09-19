@@ -64,3 +64,29 @@ class Custom:
         return await build_shadowsocks_from_inbound(
             inbound.obj, email, domain, custom_remark
         )
+
+    async def get_subscription_link(
+        self,
+        inbound_id,
+        email,
+        https: bool | None = None,
+        port: int = 2096,
+        sub_path: str = '/sub/'
+    ) -> str:
+        """
+        Получение ссылки подписки
+        :param inbound_id: ID подключения
+        :param email: email клиента
+        :param https: Если вы хотите явно указать использовать https или нет
+        :param port: порт подписки (указывается в настройках)
+        :param sub_path: Корневой путь URL-адреса подписки (Указывается в настройках)
+        :return: url
+        """
+        if https is None:
+            https = self.https
+        client = await self.get_client(inbound_id, email)
+        domain = self.get_domain()
+        if https:
+            return f'https://{domain}:{port}{sub_path}{client.subId}'
+        else:
+            return f'http://{domain}:{port}{sub_path}{client.subId}'
