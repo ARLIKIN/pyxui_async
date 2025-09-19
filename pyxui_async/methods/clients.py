@@ -1,205 +1,91 @@
 import json
-from typing import Union
 
-import pyxui_async
-from pyxui_async import errors
+from pyxui_async.errors import (
+    NotFound,
+    Duplicate,
+    NoIpRecord
+)
+from pyxui_async.models import (
+    ClientSettings,
+    GenericObjResponse,
+    ClientTrafficsResponse,
+    POST,
+    GET
+)
+from typing import Optional, Union
 
 
-class Clients:
-    async def get_client(
-        self: "pyxui_async.XUI",
-        inbound_id: int,
-        email: str = False,
-        uuid: str = False
-    ) -> Union[dict, errors.NotFound]:
-        """Get client from the existing inbound.
-
-        Parameters:
-            inbound_id (``int``):
-                Inbound id
-                
-            email (``str``, optional):
-               Email of the client
-                
-            uuid (``str``, optional):
-               UUID of the client
-            
-        Returns:
-            `~Dict`: On success, a dict is returned or else 404 an error will be raised
+class Client:
+    async def get_client_traffics_by_email(
+        self,
+        email: str
+    ) -> Union[ClientTrafficsResponse, NotFound]:
         """
-        
-        get_inbounds = await self.get_inbounds()
-        
-        if not email and not uuid:
-            raise ValueError()
-        
-        for inbound in get_inbounds['obj']:
-            if inbound['id'] != inbound_id:
-                continue
-            
-            settings = json.loads(inbound['settings'])
-            
-            for client in settings['clients']:
-                if client['email'] != email and client['id'] != uuid:
-                    continue
-                
-                return client
-
-        raise errors.NotFound()
-
-    async def get_client_stats(
-        self: "pyxui_async.XUI",
-        inbound_id: int,
-        email: str,
-    ) -> Union[dict, errors.NotFound]:
-        """Get client stats from the existing inbound.
-
-        Parameters:
-            inbound_id (``int``):
-                Inbound id
-                
-            email (``str``):
-               Email of the client
-            
-        Returns:
-            `~Dict`: On success, a dict is returned or else 404 error will be raised
+        Получить статистику трафика и информацию о клиенте по email.
+        Если клиент не найден — NotFound.
         """
-        
-        get_inbounds = await self.get_inbounds()
-        
-        if not email:
-            raise ValueError()
-        
-        for inbound in get_inbounds['obj']:
-            if inbound['id'] != inbound_id:
-                continue
-            
-            client_stats = inbound['clientStats']
-            
-            for client in client_stats:
-                if client['email'] != email:
-                    continue
-                
-                return client
+        result = await self.request(
+            method=GET,
+            endpoint=f'/panel/api/inbounds/getClientTraffics/{email}'
+        )
+        if result.get("obj") is None:
+            raise NotFound()
+        return ClientTrafficsResponse(**result)
 
-        raise errors.NotFound()
-
-    async def add_client(
-        self: "pyxui_async.XUI",
-        inbound_id: int,
-        email: str,
-        uuid: str,
-        enable: bool = True,
-        flow: str = "",
-        limit_ip: int = 0,
-        total_gb: int = 0,
-        expire_time: int = 0,
-        telegram_id: str = "",
-        subscription_id: str = "",
-    ) -> Union[dict, errors.NotFound]:
-        """Add client to the existing inbound.
-
-        Parameters:
-            inbound_id (``int``):
-                Inbound id
-                
-            email (``str``):
-               Email of the client
-                
-            uuid (``str``):
-               UUID of the client
-                
-            enable (``bool``, optional):
-               Status of the client
-                
-            flow (``str``, optional):
-               Flow of the client
-                
-            limit_ip (``str``, optional):
-               IP Limit of the client
-                
-            total_gb (``str``, optional):
-                Download and uploader limition of the client and it's in bytes
-                
-            expire_time (``str``, optional):
-                Client expiration date and it's in timestamp (epoch)
-                
-            telegram_id (``str``, optional):
-               Telegram id of the client
-                
-            subscription_id (``str``, optional):
-               Subscription id of the client
-            
-        Returns:
-            `~Dict`: On success, a dict is returned else 404 error will be raised
+    async def get_client_traffics_by_id(
+        self,
+        uuid: str
+    ) -> Union[ClientTrafficsResponse, NotFound]:
         """
+        Получить статистику трафика и информацию о клиенте по UUID.
+        Если клиент не найден — NotFound.
+        """
+        result = await self.request(
+            method=GET,
+            endpoint=f'/panel/api/inbounds/getClientTrafficsById/{uuid}'
+        )
+        if result.get("obj") is None:
+            raise NotFound()
+        return ClientTrafficsResponse(**result)
 
-        settings = {
-            "clients": [
-                {
-                    "id": uuid,
-                    "email": email,
-                    "enable": enable,
-                    "flow": flow,
-                    "limitIp": limit_ip,
-                    "totalGB": total_gb,
-                    "expiryTime": expire_time,
-                    "tgId": telegram_id,
-                    "subId": subscription_id
-                }
-            ],
-            "decryption": "none",
-            "fallbacks": []
-        }
-        
-        params = {
+    async def client_ips(
+        self,
+        email: str
+    ) -> Union[GenericObjResponse, NoIpRecord]:
+        """Получить IP-адреса, связанные с клиентом по email."""
+        result = await self.request(
+            method=POST, endpoint=f'/panel/api/inbounds/clientIps/{email}'
+        )
+        if result.get('obj') == 'No IP Record':
+            raise NoIpRecord(email=email)
+        return GenericObjResponse(**result)
+
+    async def add_clients(
+        self, inbound_id: int, client_settings: ClientSettings
+    ) -> GenericObjResponse:
+        """Добавить клиента(ов) к Inbound по ID."""
+        for client in client_settings.clients:
+            if client.id == '':
+                new_id = await self.get_new_uuid()
+                client.id = new_id.obj.uuid
+        settings_str = client_settings.model_dump_json()
+        request_body = {
             "id": inbound_id,
-            "settings": json.dumps(settings)
+            "settings": settings_str
         }
-
-        return await self.request(
-            path="addClient",
-            method="POST",
-            params=params
+        result = await self.request(
+            method=POST,
+            endpoint='/panel/api/inbounds/addClient',
+            json=request_body,
         )
-
-    async def delete_client(
-        self: "pyxui_async.XUI",
-        inbound_id: int,
-        email: str = False,
-        uuid: str = False
-    ) -> Union[dict, errors.NotFound]:
-        """Delete client from the existing inbound.
-
-        Parameters:
-            inbound_id (``int``):
-                Inbound id
-                
-            email (``str``, optional):
-               Email of the client
-                
-            uuid (``str``, optional):
-               UUID of the client
-            
-        Returns:
-            `~Dict`: On success, a dict is returned else 404 error will be raised
-        """
-        
-        find_client = await self.get_client(
-            inbound_id=inbound_id,
-            email=email,
-            uuid=uuid
-        )
-        
-        return await self.request(
-            path=f"{inbound_id}/delClient/{find_client['id']}",
-            method="POST"
-        )
+        if 'Duplicate email' in result.get('msg'):
+            raise Duplicate(message=result.get('msg'))
+        return GenericObjResponse(**result)
 
     async def update_client(
-        self: "pyxui_async.XUI",
+        self,
         inbound_id: int,
-        email: str | bool = False,
+        email: str,
         uuid: str | bool = False,
         enable: bool | None = None,
         flow: str | None = None,
@@ -208,75 +94,104 @@ class Clients:
         expire_time: int | None = None,
         telegram_id: str | None = None,
         subscription_id: str | None = None,
-    ) -> Union[dict, errors.NotFound]:
-        """Add client to the existing inbound.
-
-        Parameters:
-            inbound_id (``int``):
-                Inbound id
-                
-            email (``str``):
-               Email of the client
-                
-            uuid (``str``):
-               UUID of the client
-                
-            enable (``bool``):
-               Status of the client
-                
-            flow (``str``):
-               Flow of the client
-                
-            limit_ip (``str``):
-               IP Limit of the client
-                
-            total_gb (``str``):
-                Download and uploader limition of the client and it's in bytes
-                
-            expire_time (``str``):
-                Client expiration date and it's in timestamp (epoch)
-                
-            telegram_id (``str``):
-               Telegram id of the client
-                
-            subscription_id (``str``):
-               Subscription id of the client
-            
-        Returns:
-            `~Dict`: On success, a dict is returned else 404 error will be raised
-        """
-        
-        find_client = await self.get_client(
-            inbound_id=inbound_id,
-            email=email,
-            uuid=uuid
-        )
-        
+    ) -> GenericObjResponse:
+        """Обновить данные клиента в Inbound по UUID."""
+        find_client = await self.get_client(inbound_id, email)
         settings = {
             "clients": [
                 {
-                    "id": find_client['id'],
-                    "email": find_client['email'],
-                    "enable": enable if enable is not None else find_client['enable'],
-                    "flow": flow if flow else find_client['flow'],
-                    "limitIp": limit_ip if limit_ip else find_client['limitIp'],
-                    "totalGB": total_gb if total_gb else find_client['totalGB'],
-                    "expiryTime": expire_time if expire_time else find_client['expiryTime'],
-                    "tgId": telegram_id if telegram_id else find_client['tgId'],
-                    "subId": subscription_id if subscription_id else find_client['subId'],
+                    "id": find_client.id,
+                    "email": find_client.email,
+                    "enable": enable if enable is not None else
+                    find_client.enable,
+                    "flow": flow if flow else find_client.flow,
+                    "limitIp": limit_ip if limit_ip else find_client.limitIp,
+                    "totalGB": total_gb if total_gb else find_client.totalGB,
+                    "expiryTime": expire_time if expire_time else
+                    find_client.expiryTime,
+                    "tgId": telegram_id if telegram_id else find_client.tgId,
+                    "subId": subscription_id if subscription_id else
+                    find_client.subId,
                 }
             ],
             "decryption": "none",
             "fallbacks": []
         }
-            
-        params = {
+        request_body = {
             "id": inbound_id,
             "settings": json.dumps(settings)
         }
-        
-        return await self.request(
-            path=f"updateClient/{find_client['id']}",
-            method="POST",
-            params=params
+        result = await self.request(
+            method=POST,
+            endpoint=f"/panel/api/inbounds/updateClient/{uuid}",
+            json=request_body,
         )
+        return GenericObjResponse(**result)
+
+    async def clear_client_ips(self, email: str) -> GenericObjResponse:
+        """Очистить (сбросить) IP-адреса клиента по email."""
+        result = await self.request(
+            method=POST,
+            endpoint=f"/panel/api/inbounds/clearClientIps/{email}"
+        )
+        return GenericObjResponse(**result)
+
+    async def reset_client_traffic(
+        self,
+        inbound_id: int,
+        email: str
+    ) -> GenericObjResponse:
+        """Сбросить трафик конкретного клиента по email и Inbound."""
+        result = await self.request(
+            method=POST,
+            endpoint=
+                f"/panel/api/inbounds/{inbound_id}/resetClientTraffic/{email}"
+        )
+        return GenericObjResponse(**result)
+
+    async def delete_client_id(
+        self,
+        inbound_id: int,
+        uuid: str
+    ) -> GenericObjResponse:
+        """Удалить клиента из Inbound по UUID."""
+        result = await self.request(
+            method=POST,
+            endpoint=f'/panel/api/inbounds/{inbound_id}/delClient/{uuid}'
+        )
+        return GenericObjResponse(**result)
+
+    async def delete_client_email(
+        self,
+        inbound_id: int,
+        email: str
+    ) -> GenericObjResponse:
+        """Удалить клиента из Inbound по email."""
+        result = await self.request(
+            method=POST,
+            endpoint=f'/panel/api/inbounds/{inbound_id}/delClientByEmail/{email}'
+        )
+        return GenericObjResponse(**result)
+
+    async def delete_depleted_clients(
+        self,
+        inbound_id: Optional[int] = None
+    ) -> GenericObjResponse:
+        """Удалить всех исчерпанных клиентов (depleted clients) из Inbound."""
+        if inbound_id is not None:
+            endpoint = f'/panel/api/inbounds/delDepletedClients/{inbound_id}'
+        else:
+            endpoint = '/panel/api/inbounds/delDepletedClients/'
+        result = await self.request(
+            method=POST,
+            endpoint=endpoint,
+        )
+        return GenericObjResponse(**result)
+
+    async def online_clients(self) -> GenericObjResponse:
+        """Получить список онлайн-клиентов."""
+        result = await self.request(
+            method=POST,
+            endpoint=f'/panel/api/inbounds/onlines'
+        )
+        return GenericObjResponse(**result)
