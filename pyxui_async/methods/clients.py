@@ -64,10 +64,6 @@ class Client:
         self, inbound_id: int, client_settings: ClientSettings
     ) -> GenericObjResponse:
         """Добавить клиента(ов) к Inbound по ID."""
-        for client in client_settings.clients:
-            if client.id == '':
-                new_id = await self.get_new_uuid()
-                client.id = new_id.obj.uuid
         settings_str = client_settings.model_dump_json()
         request_body = {
             "id": inbound_id,

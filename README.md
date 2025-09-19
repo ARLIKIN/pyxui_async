@@ -61,11 +61,12 @@ class InboundsResponse(ResponseBase):
 
 - Add client to the existing inbound
 ```python
+new_id = await xui.get_new_uuid()
 get = await xui.add_clients(
     inbound_id=1,
     client_settings=ClientSettings(clients=[Client(
+        id=new_id.obj.uuid,
         email="example@gmal.com",
-        id="5d3d1bac-49cd-4b66-8be9-a728efa205fa",
         flow = "xtls-rprx-vision",
         subscription_id = "Asaw3ras3asdfa1was"
     )])
