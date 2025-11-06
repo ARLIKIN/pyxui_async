@@ -12,7 +12,8 @@ async def generate_wireguard_configs_dict(
     inbound: Inbound,
     address: str,
     dns: list[str] = ['1.1.1.1', '1.0.0.1'],
-    allowed_ips: str = '0.0.0.0/0, ::/0'
+    allowed_ips: str = '0.0.0.0/0, ::/0',
+    user_public_key: str = None
 ) -> Dict[str, str]:
     """
     Генерирует конфигурации WireGuard и возвращает их в виде словаря,
@@ -23,6 +24,8 @@ async def generate_wireguard_configs_dict(
         address: Адрес панели 3x-ui без http или https
         dns: DNS адреса по умолчанию 1.1.1.1, 1.0.0.1
         allowed_ips: Разрешенные адреса по умолчанию 0.0.0.0/0, ::/0
+        user_public_key: Публичный ключ пользователя, укажите если хотите
+        получить только одного пользователя.
 
     Returns:
         Dict[str, str]: Словарь с конфигурациями
@@ -38,6 +41,8 @@ async def generate_wireguard_configs_dict(
     public_key = await generate_public_key(server_secret_key)
 
     for peer in settings.peers:
+        if user_public_key is not None and user_public_key != peer.publicKey:
+            continue
         config_lines = [
             "[Interface]",
             f"PrivateKey = {peer.privateKey}",
