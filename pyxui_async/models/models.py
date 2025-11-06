@@ -126,12 +126,21 @@ class SniffingSettings(BaseModel):
     routeOnly: Optional[bool] = False
 
 
+class WireGuardPeer(BaseModel):
+    """Модель для пира WireGuard"""
+    privateKey: Optional[str] = None
+    publicKey: Optional[str] = None
+    preSharedKey: Optional[str] = ''
+    allowedIPs: Optional[list[str]] = []
+    keepAlive: Optional[int] = None
+
+
 class InboundSettings(BaseModel):
     clients: Optional[List[Client]] = []
     fallbacks: List[Any] = []
     mtu: Optional[int] = None
     secretKey: Optional[str] = None
-    peers: Optional[List[Dict[str, Any]]] = []
+    peers: Optional[List[WireGuardPeer]] = []
     reserved: Optional[List[int]] = []
     workers: Optional[int] = None
     domainStrategy: Optional[str] = None

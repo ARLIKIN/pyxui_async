@@ -1,6 +1,17 @@
-from typing import Union
+import ipaddress
+import logging
+from typing import Union, Dict
 
-from pyxui_async.models import InboundClientStats
+from pyxui_async.config_gen.wireguard import (
+    generate_wireguard_configs_dict,
+    generate_wireguard_keys
+)
+from pyxui_async.models import (
+    InboundClientStats,
+    WireGuardPeer,
+    InboundRequest,
+    SniffingSettings
+)
 from pyxui_async.config_gen import build_vless_from_inbound
 from pyxui_async.config_gen.shadowsocks import build_shadowsocks_from_inbound
 from pyxui_async.config_gen.trojan import build_trojan_from_inbound
@@ -81,6 +92,120 @@ class Custom:
         return await build_shadowsocks_from_inbound(
             inbound.obj, email, domain, custom_remark
         )
+
+    async def get_keys_wg(
+        self,
+        inbound_id,
+        dns: list[str] = ['1.1.1.1', '1.0.0.1'],
+        allowed_ips: str = '0.0.0.0/0, ::/0'
+    ) -> Dict[str, str]:
+        inbound = await self.get_inbound(inbound_id)
+        domain = self.get_domain()
+        return await generate_wireguard_configs_dict(
+            inbound, domain, dns, allowed_ips
+        )
+
+    async def add_client_wg(
+        self,
+        inbound_id,
+        preSharedKey: str = ''
+    ) -> None:
+        inbound = await self.get_inbound(inbound_id=inbound_id)
+        private_key, public_key = await generate_wireguard_keys()
+        allowed_ips = await self._get_next_allowed_ip(inbound.obj.settings.peers)
+        new_peer = WireGuardPeer(
+            privateKey=private_key,
+            publicKey=public_key,
+            preSharedKey=preSharedKey,
+            allowedIPs=[allowed_ips],
+            keepAlive=0
+        )
+        new_inbound = InboundRequest(
+            up=inbound.obj.up,
+            down=inbound.obj.down,
+            total=inbound.obj.total,
+            remark=inbound.obj.remark,
+            enable=inbound.obj.enable,
+            expiryTime=inbound.obj.expiryTime,
+            listen=inbound.obj.listen,
+            port=inbound.obj.port,
+            protocol=inbound.obj.protocol,
+            settings=inbound.obj.settings,
+            streamSettings=inbound.obj.streamSettings,
+            sniffing=SniffingSettings(
+                enabled=inbound.obj.sniffing.enabled,
+                destOverride=inbound.obj.sniffing.destOverride,
+                metadataOnly=inbound.obj.sniffing.metadataOnly,
+                routeOnly=inbound.obj.sniffing.routeOnly
+            ),
+        )
+        new_inbound.settings.peers.append(new_peer)
+        result = await self.update_inbound(
+            inbound_id=inbound_id,
+            inbound=new_inbound
+        )
+        return {
+            'result': result,
+            'new_peer': new_peer,
+        }
+
+    async def _get_next_allowed_ip(self, peers):
+        """
+        Находит следующий available IP адрес - берет максимальный
+        существующий и прибавляет 1.
+        Маску оставляет такой же как у других peers.
+        """
+        if not peers:
+            return '10.0.0.2/32'
+        max_ip = None
+        cidr_mask = None
+        for peer in peers:
+            for allowed_ip in peer.allowedIPs:
+                ip_network = ipaddress.ip_network(allowed_ip, strict=False)
+                ip_address = ip_network.network_address
+                if cidr_mask is None:
+                    cidr_mask = ip_network.prefixlen
+                if max_ip is None or ip_address > max_ip:
+                    max_ip = ip_address
+        if max_ip is None:
+            return '10.0.0.2/32'
+        if cidr_mask is None:
+            cidr_mask = 32
+        next_ip = max_ip + 1
+        return f"{next_ip}/{cidr_mask}"
+
+    async def delete_client_wg(self, inbound_id, user_public_key):
+        inbound = await self.get_inbound(inbound_id=inbound_id)
+        new_inbound = InboundRequest(
+            up=inbound.obj.up,
+            down=inbound.obj.down,
+            total=inbound.obj.total,
+            remark=inbound.obj.remark,
+            enable=inbound.obj.enable,
+            expiryTime=inbound.obj.expiryTime,
+            listen=inbound.obj.listen,
+            port=inbound.obj.port,
+            protocol=inbound.obj.protocol,
+            settings=inbound.obj.settings,
+            streamSettings=inbound.obj.streamSettings,
+            sniffing=SniffingSettings(
+                enabled=inbound.obj.sniffing.enabled,
+                destOverride=inbound.obj.sniffing.destOverride,
+                metadataOnly=inbound.obj.sniffing.metadataOnly,
+                routeOnly=inbound.obj.sniffing.routeOnly
+            ),
+        )
+        peers = []
+        for peer in inbound.obj.settings.peers:
+            if peer.publicKey != user_public_key:
+                peers.append(peer)
+        new_inbound.settings.peers = peers
+        result = await self.update_inbound(
+            inbound_id=inbound_id,
+            inbound=new_inbound
+        )
+        return result
+
 
     async def get_subscription_link(
         self,
