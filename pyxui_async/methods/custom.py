@@ -105,6 +105,19 @@ class Custom:
             inbound, domain, dns, allowed_ips
         )
 
+    async def get_key_client_wg(
+        self,
+        inbound_id,
+        user_public_key: str,
+        dns: list[str] = ['1.1.1.1', '1.0.0.1'],
+        allowed_ips: str = '0.0.0.0/0, ::/0'
+    ) -> Dict[str, str]:
+        inbound = await self.get_inbound(inbound_id)
+        domain = self.get_domain()
+        return await generate_wireguard_configs_dict(
+            inbound, domain, dns, allowed_ips, user_public_key
+        )
+
     async def add_client_wg(
         self,
         inbound_id,
