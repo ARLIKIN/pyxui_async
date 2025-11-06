@@ -112,7 +112,7 @@ class Custom:
     ) -> None:
         inbound = await self.get_inbound(inbound_id=inbound_id)
         private_key, public_key = await generate_wireguard_keys()
-        allowed_ips = await self.get_next_allowed_ip(inbound.obj.settings.peers)
+        allowed_ips = await self._get_next_allowed_ip(inbound.obj.settings.peers)
         new_peer = WireGuardPeer(
             privateKey=private_key,
             publicKey=public_key,
@@ -144,9 +144,12 @@ class Custom:
             inbound_id=inbound_id,
             inbound=new_inbound
         )
-        return result
+        return {
+            'result': result,
+            'new_peer': new_peer,
+        }
 
-    async def get_next_allowed_ip(self, peers):
+    async def _get_next_allowed_ip(self, peers):
         """
         Находит следующий available IP адрес - берет максимальный
         существующий и прибавляет 1.
@@ -170,6 +173,39 @@ class Custom:
             cidr_mask = 32
         next_ip = max_ip + 1
         return f"{next_ip}/{cidr_mask}"
+
+    async def delete_client_wg(self, inbound_id, user_public_key):
+        inbound = await self.get_inbound(inbound_id=inbound_id)
+        new_inbound = InboundRequest(
+            up=inbound.obj.up,
+            down=inbound.obj.down,
+            total=inbound.obj.total,
+            remark=inbound.obj.remark,
+            enable=inbound.obj.enable,
+            expiryTime=inbound.obj.expiryTime,
+            listen=inbound.obj.listen,
+            port=inbound.obj.port,
+            protocol=inbound.obj.protocol,
+            settings=inbound.obj.settings,
+            streamSettings=inbound.obj.streamSettings,
+            sniffing=SniffingSettings(
+                enabled=inbound.obj.sniffing.enabled,
+                destOverride=inbound.obj.sniffing.destOverride,
+                metadataOnly=inbound.obj.sniffing.metadataOnly,
+                routeOnly=inbound.obj.sniffing.routeOnly
+            ),
+        )
+        peers = []
+        for peer in inbound.obj.settings.peers:
+            if peer.publicKey != user_public_key:
+                peers.append(peer)
+        new_inbound.settings.peers = peers
+        result = await self.update_inbound(
+            inbound_id=inbound_id,
+            inbound=new_inbound
+        )
+        return result
+
 
     async def get_subscription_link(
         self,
