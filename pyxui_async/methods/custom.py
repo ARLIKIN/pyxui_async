@@ -164,28 +164,34 @@ class Custom:
 
     async def _get_next_allowed_ip(self, peers):
         """
-        Находит следующий available IP адрес - берет максимальный
-        существующий и прибавляет 1.
-        Маску оставляет такой же как у других peers.
+        Находит следующий available IP адрес - ищет минимальный свободный IP,
+        начиная с 10.0.0.2. Маску оставляет такой же как у других peers.
         """
         if not peers:
             return '10.0.0.2/32'
-        max_ip = None
+        used_ips = []
         cidr_mask = None
         for peer in peers:
             for allowed_ip in peer.allowedIPs:
                 ip_network = ipaddress.ip_network(allowed_ip, strict=False)
                 ip_address = ip_network.network_address
+                used_ips.append(ip_address)
+
                 if cidr_mask is None:
                     cidr_mask = ip_network.prefixlen
-                if max_ip is None or ip_address > max_ip:
-                    max_ip = ip_address
-        if max_ip is None:
-            return '10.0.0.2/32'
         if cidr_mask is None:
             cidr_mask = 32
-        next_ip = max_ip + 1
-        return f"{next_ip}/{cidr_mask}"
+        used_ips.sort()
+        start_ip = ipaddress.IPv4Address('10.0.0.2')
+        candidate_ip = start_ip
+        for used_ip in used_ips:
+            if used_ip < candidate_ip:
+                continue
+            elif used_ip == candidate_ip:
+                candidate_ip += 1
+            else:
+                break
+        return f"{candidate_ip}/{cidr_mask}"
 
     async def delete_client_wg(self, inbound_id, user_public_key):
         inbound = await self.get_inbound(inbound_id=inbound_id)
