@@ -110,6 +110,18 @@ class TlsSettings(BaseModel):
         return v
 
 
+class XhttpSettings(BaseModel):
+    path: Optional[str] = None
+    host: Optional[str] = None
+    header: Optional[Dict[str, Union[str, Dict[str, Any]]]] = None
+    scMaxBufferedPosts: Optional[int] = None
+    scMaxEachPostBytes: Optional[str] = None
+    scStreamUpServerSecs: Optional[str] = None
+    noSSEHeader: Optional[bool] = None
+    xPaddingBytes: Optional[str] = None
+    mode: Optional[str] = None
+
+
 class StreamSettings(BaseModel):
     network: str
     security: str
@@ -117,7 +129,7 @@ class StreamSettings(BaseModel):
     realitySettings: Optional[RealitySettings] = None
     tcpSettings: Optional[TcpSettings] = None
     tlsSettings: Optional[TlsSettings] = None
-
+    xhttpSettings: Optional[XhttpSettings] = None
 
 class SniffingSettings(BaseModel):
     enabled: bool

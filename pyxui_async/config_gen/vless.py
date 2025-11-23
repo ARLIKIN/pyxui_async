@@ -34,7 +34,22 @@ async def build_vless_from_inbound(
         params["type"] = stream.network
         if inbound.settings.encryption:
             params["encryption"] = inbound.settings.encryption
-        params["security"] = 'none'
+
+        if stream.network == 'xhttp' and stream.xhttpSettings is not None:
+            if stream.xhttpSettings.path is not None:
+                params["path"] = urllib.parse.quote(stream.xhttpSettings.path)
+            params["host"] = urllib.parse.quote(stream.xhttpSettings.host) or ''
+            if stream.xhttpSettings.mode is not None:
+                params["mode"] = urllib.parse.quote(stream.xhttpSettings.mode)
+            if stream.externalProxy is not None and len(stream.externalProxy) > 0:
+                params["security"] = stream.externalProxy[0]['forceTls']
+                if str(inbound.port) != stream.externalProxy[0]['port']:
+                    base = (
+                        f"vless://{client.id}@{address}"
+                        f":{stream.externalProxy[0]['port']}"
+                    )
+        if params.get('security') is None:
+            params["security"] = 'none'
         if stream.security and stream.security != "none":
             params["security"] = stream.security
         if stream.security == "reality" and stream.realitySettings:
