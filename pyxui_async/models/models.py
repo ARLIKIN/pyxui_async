@@ -127,6 +127,13 @@ class GrpcSettings(BaseModel):
     authority: Optional[str] = None
     multiMode: Optional[bool] = None
 
+class WsSettings(BaseModel):
+    acceptProxyProtocol: Optional[bool] = None
+    path: Optional[str] = None
+    host: Optional[str] = None
+    headers: Optional[Dict[str, Union[str, Dict[str, Any]]]] = None
+    heartbeatPeriod: Optional[int] = None
+
 
 class StreamSettings(BaseModel):
     network: str
@@ -137,6 +144,7 @@ class StreamSettings(BaseModel):
     tlsSettings: Optional[TlsSettings] = None
     xhttpSettings: Optional[XhttpSettings] = None
     grpcSettings: Optional[GrpcSettings] = None
+    wsSettings: Optional[WsSettings] = None
 
 class SniffingSettings(BaseModel):
     enabled: bool

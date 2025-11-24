@@ -48,9 +48,14 @@ async def build_vless_from_inbound(
                         f"vless://{client.id}@{address}"
                         f":{stream.externalProxy[0]['port']}"
                     )
-        if stream.network == 'grpc' and stream.grpcSettings is not None:
+        elif stream.network == 'grpc' and stream.grpcSettings is not None:
             params["serviceName"] = stream.grpcSettings.serviceName or ''
             params["authority"] = stream.grpcSettings.authority or ''
+        elif stream.network == 'ws' and stream.wsSettings is not None:
+            if stream.wsSettings.path is not None:
+                params["path"] = urllib.parse.quote(stream.wsSettings.path)
+            if stream.wsSettings.host is not None:
+                params["host"] = urllib.parse.quote(stream.wsSettings.host)
         if params.get('security') is None:
             params["security"] = 'none'
         if stream.security and stream.security != "none":
@@ -67,11 +72,11 @@ async def build_vless_from_inbound(
         elif stream.security == "tls":
             if stream.tlsSettings:
                 params["fp"] = stream.tlsSettings.settings.fingerprint
-                params["alpn"] = (
-                    stream.tlsSettings.alpn[0] + ','
-                    + stream.tlsSettings.alpn[1]
-                )
-                params["ech"] = stream.tlsSettings.settings.echConfigList
+                params["alpn"] = ",".join(stream.tlsSettings.alpn)
+                if stream.tlsSettings.settings.echConfigList is not None:
+                    params["ech"] = stream.tlsSettings.settings.echConfigList
+                if stream.tlsSettings.serverName is not None:
+                    params["sni"] = stream.tlsSettings.serverName
         if stream.network == "tcp" and stream.tcpSettings:
             tcp = stream.tcpSettings
             if tcp.header and tcp.header.get("type"):
