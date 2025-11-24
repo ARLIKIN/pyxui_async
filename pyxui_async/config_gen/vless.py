@@ -48,6 +48,9 @@ async def build_vless_from_inbound(
                         f"vless://{client.id}@{address}"
                         f":{stream.externalProxy[0]['port']}"
                     )
+        if stream.network == 'grpc' and stream.grpcSettings is not None:
+            params["serviceName"] = stream.grpcSettings.serviceName or ''
+            params["authority"] = stream.grpcSettings.authority or ''
         if params.get('security') is None:
             params["security"] = 'none'
         if stream.security and stream.security != "none":

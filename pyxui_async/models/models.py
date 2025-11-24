@@ -122,6 +122,12 @@ class XhttpSettings(BaseModel):
     mode: Optional[str] = None
 
 
+class GrpcSettings(BaseModel):
+    serviceName: Optional[str] = None
+    authority: Optional[str] = None
+    multiMode: Optional[bool] = None
+
+
 class StreamSettings(BaseModel):
     network: str
     security: str
@@ -130,6 +136,7 @@ class StreamSettings(BaseModel):
     tcpSettings: Optional[TcpSettings] = None
     tlsSettings: Optional[TlsSettings] = None
     xhttpSettings: Optional[XhttpSettings] = None
+    grpcSettings: Optional[GrpcSettings] = None
 
 class SniffingSettings(BaseModel):
     enabled: bool
