@@ -169,8 +169,6 @@ class Client:
             method=POST,
             endpoint=f'/panel/api/inbounds/{inbound_id}/delClientByEmail/{email}'
         )
-        if result == '':
-            return result
         return GenericObjResponse(**result)
 
     async def delete_depleted_clients(

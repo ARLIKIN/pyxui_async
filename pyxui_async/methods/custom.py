@@ -33,6 +33,9 @@ class Custom:
             except NotFound:
                 client = await self.get_client(inbound_id, email)
                 return await self.delete_client_id(inbound_id, client.id)
+            except TypeError:
+                client = await self.get_client(inbound_id, email)
+                return await self.delete_client_id(inbound_id, client.id)
         elif uuid is not None:
             return await self.delete_client_id(inbound_id, uuid)
         else:
