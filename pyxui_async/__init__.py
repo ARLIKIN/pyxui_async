@@ -11,7 +11,8 @@ class XUI(Methods):
         timeout: int = 30,
         username: Optional[str] = None,
         password: Optional[str] = None,
+        token: Optional[str] = None,
     ):
         super().__init__(
-            full_address, panel, https, timeout, username, password
+            full_address, panel, https, timeout, username, password, token
         )

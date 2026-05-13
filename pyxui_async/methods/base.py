@@ -16,6 +16,7 @@ class Base:
         timeout: int = 30,
         username: Optional[str] = None,
         password: Optional[str] = None,
+        token: str = None
     ):
         self.address = full_address.rstrip("/")
         self.panel = panel
@@ -24,6 +25,7 @@ class Base:
         self.cookies: Dict[str, str] = {}
         self.username = username
         self.password = password
+        self.token = token
         self._session: Optional[aiohttp.ClientSession] = None
         self._closed = True
 
@@ -52,6 +54,8 @@ class Base:
         headers = headers or {}
         if self.cookies:
             headers['Cookie'] = "; ".join(f"{k}={v}" for k, v in self.cookies.items())
+        if self.token is not None:
+            headers['Authorization'] = f'Bearer {self.token}'
         try:
             async with self._session.request(
                 method,

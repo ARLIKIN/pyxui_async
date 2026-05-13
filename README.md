@@ -16,11 +16,12 @@ xui = XUI(
     full_address="http://staliox.site:2087",
     panel="sanaei",  # Your panel name "sanaei"
     https=False,  # Make note if you don't use https set False else set True
-    timeout=30 # timeout connect
+    timeout=30, # timeout connect
+    token='D28asdlj238jasldf2asdf' # new version panel
 )
 ```
 
-- Login in your panel
+- Login in your panel (old version panel)
 
 ```python
 from pyxui_async.errors import BadLogin
